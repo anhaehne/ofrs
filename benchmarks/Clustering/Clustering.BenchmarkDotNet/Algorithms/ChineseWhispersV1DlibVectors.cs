@@ -7,13 +7,19 @@ namespace Clustering.BenchmarkDotNet.Algorithms
 {
     public class ChineseWhispersV1Dlib : IClusteringAlgorithm
     {
+        private readonly double _clusterDistance;
         private readonly List<Node> _nodes = new List<Node>();
 
-        public Guid GetCluster(float[] encoding, double distance)
+        public ChineseWhispersV1Dlib(double clusterDistance)
+        {
+            _clusterDistance = clusterDistance;
+        }
+
+        public Guid GetCluster(float[] encoding)
         {
             var dlibEncoding = Convert(encoding);
 
-            var clusterId = _nodes.Where(x => Distance(dlibEncoding, x.Encoding) < distance)
+            var clusterId = _nodes.Where(x => Distance(dlibEncoding, x.Encoding) < _clusterDistance)
                 .GroupBy(x => x.ClusterId)
                 .OrderByDescending(x => x.Count()).FirstOrDefault()?.Key;
 
@@ -27,11 +33,6 @@ namespace Clustering.BenchmarkDotNet.Algorithms
                 Recalculate();
 
             return newNode.ClusterId;
-        }
-
-        public void OptimizeClusters()
-        {
-            throw new NotImplementedException();
         }
 
         public int ClusterCount => _nodes.Select(x => x.ClusterId).Distinct().Count();

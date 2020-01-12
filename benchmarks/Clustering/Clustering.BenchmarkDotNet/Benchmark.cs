@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -19,25 +20,19 @@ namespace Clustering.BenchmarkDotNet
     {
         private readonly List<Specimen> _fill = new List<Specimen>();
         private readonly List<Specimen> _test = new List<Specimen>();
-        private HashSet<Guid>[] _clusterIds;
         private List<List<float[]>> _encoding;
 
         [ParamsSource(nameof(Algorithms))]
         public IClusteringAlgorithm Algorithm { get; set; }
 
         public IEnumerable<IClusteringAlgorithm> Algorithms =>
-            new IClusteringAlgorithm[] {new ChineseWhispersV3Vectorized()};
+            new IClusteringAlgorithm[] {new ChineseWhispersV5SimpleLimit(0.4), };
 
         [GlobalSetup]
         public void Setup()
         {
             var bytes = File.ReadAllBytes("data.msgpck");
             _encoding = MessagePackSerializer.Deserialize<List<List<float[]>>>(bytes).Where(x => x.Count > 2).ToList();
-
-            _clusterIds = new HashSet<Guid>[_encoding.Count];
-
-            for (var i = 0; i < _encoding.Count; i++)
-                _clusterIds[i] = new HashSet<Guid>();
 
             for (var subjectIndex = 0; subjectIndex < _encoding.Count; subjectIndex++)
             for (var imageIndex = 0; imageIndex < Math.Ceiling(_encoding[subjectIndex].Count / 2d); imageIndex++)
@@ -81,7 +76,7 @@ namespace Clustering.BenchmarkDotNet
 
             foreach (var specimen in _fill)
             {
-                var clusterId = Algorithm.GetCluster(specimen.Encoding, 0.4);
+                var clusterId = Algorithm.GetCluster(specimen.Encoding);
                 allClusterIds.Add(clusterId);
                 results[specimen.SubjectIndex].Add(clusterId);
             }
@@ -98,7 +93,7 @@ namespace Clustering.BenchmarkDotNet
                         temp[j] = specimen.Encoding[j] + t;
                     }
 
-                    var clusterId = Algorithm.GetCluster(temp, 0.4);
+                    var clusterId = Algorithm.GetCluster(temp);
                     allClusterIds.Add(clusterId);
                     results[specimen.SubjectIndex].Add(clusterId);
                 }
@@ -107,14 +102,7 @@ namespace Clustering.BenchmarkDotNet
             stopwatch.Stop();
 
             Console.WriteLine($"Filling took {stopwatch.ElapsedMilliseconds}ms");
-
-            stopwatch.Reset();
-            stopwatch.Start();
-            Algorithm.OptimizeClusters();
-            stopwatch.Stop();
-
-            Console.WriteLine($"Optimizing took {stopwatch.ElapsedMilliseconds}ms");
-
+            
             stopwatch.Reset();
             stopwatch.Start();
 
@@ -123,7 +111,7 @@ namespace Clustering.BenchmarkDotNet
 
             foreach (var specimen in _test)
             {
-                var clusterId = Algorithm.GetCluster(specimen.Encoding, 0.4);
+                var clusterId = Algorithm.GetCluster(specimen.Encoding);
 
                 if (!allClusterIds.Contains(clusterId))
                 {

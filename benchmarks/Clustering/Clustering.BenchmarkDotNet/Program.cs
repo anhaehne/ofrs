@@ -10,7 +10,7 @@ namespace Clustering.BenchmarkDotNet
         {
             var b = new Benchmark();
             b.Setup();
-            b.Algorithm = new ChineseWhispersV4SelfOptimizing();
+            b.Algorithm = new ChineseWhispersV5SimpleLimit(0.4);
             b.RunAlgorithm();
 
             //var summary = BenchmarkRunner.Run<Benchmark>();//new DebugInProcessConfig());

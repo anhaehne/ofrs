@@ -4,9 +4,7 @@ namespace Clustering.BenchmarkDotNet.Algorithms
 {
     public interface IClusteringAlgorithm
     {
-        Guid GetCluster(float[] encoding, double distance);
-
-        void OptimizeClusters();
+        Guid GetCluster(float[] encoding);
 
         public int ClusterCount { get; }
 

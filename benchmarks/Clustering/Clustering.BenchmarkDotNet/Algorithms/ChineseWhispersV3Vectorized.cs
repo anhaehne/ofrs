@@ -8,11 +8,17 @@ namespace Clustering.BenchmarkDotNet.Algorithms
 {
     public class ChineseWhispersV3Vectorized : IClusteringAlgorithm
     {
+        private readonly double _clusterDistance;
         private readonly ConcurrentBag<Node> _nodes = new ConcurrentBag<Node>();
 
-        public Guid GetCluster(float[] encoding, double distance)
+        public ChineseWhispersV3Vectorized(double clusterDistance)
         {
-            var clusterId = _nodes.Where(x => IsDistanceSmallerThan(encoding, x.Encoding, distance))
+            _clusterDistance = clusterDistance;
+        }
+
+        public Guid GetCluster(float[] encoding)
+        {
+            var clusterId = _nodes.Where(x => IsDistanceSmallerThan(encoding, x.Encoding, _clusterDistance))
                 .GroupBy(x => x.ClusterId)
                 .OrderByDescending(x => x.Count()).FirstOrDefault()?.Key;
 
