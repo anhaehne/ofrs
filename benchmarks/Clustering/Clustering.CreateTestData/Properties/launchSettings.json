@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ChineseWhispers.CreateTestData": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Users\\andre\\Desktop\\TestData"
+    }
+  }
+}
