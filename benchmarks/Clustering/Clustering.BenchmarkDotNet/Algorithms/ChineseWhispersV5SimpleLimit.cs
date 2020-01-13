@@ -117,16 +117,17 @@ namespace Clustering.BenchmarkDotNet.Algorithms
 
             for (var i = 0; i <= lhs.Length - Vector<float>.Count; i += Vector<float>.Count)
             {
-                var diff = new Vector<float>(lhs.Slice(i, Vector<float>.Count)) -
+                // Get the distance of the two vectors.
+                var diff = new Vector<float>(lhs.Slice(i, Vector<float>.Count)) - 
                            new Vector<float>(rhs.Slice(i, Vector<float>.Count));
                 result += Vector.Dot(diff, diff);
 
+                // If the result is already greater then the requested distance we can exit early.
                 if (result > distanceSquared)
                     return false;
             }
 
             var actualDistance = Math.Sqrt(result);
-
             return actualDistance < distance;
         }
 
