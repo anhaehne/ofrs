@@ -1,6 +1,5 @@
-﻿using System;
-using BenchmarkDotNet.Running;
-using Clustering.BenchmarkDotNet.Algorithms;
+﻿using Clustering.BenchmarkDotNet.Algorithms;
+using System;
 
 namespace Clustering.BenchmarkDotNet
 {
@@ -8,9 +7,9 @@ namespace Clustering.BenchmarkDotNet
     {
         private static void Main(string[] args)
         {
-            var b = new Benchmark();
+            Benchmark b = new Benchmark();
             b.Setup();
-            b.Algorithm = new ChineseWhispersV5SimpleLimit(0.4);
+            b.Algorithm = new ChineseWhispersV6LockFree(0.4);
             b.RunAlgorithm();
 
             //var summary = BenchmarkRunner.Run<Benchmark>();//new DebugInProcessConfig());

@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 
-namespace Clustering.BenchmarkDotNet
+namespace Clustering.BenchmarkDotNet.Utils
 {
     public sealed class ConcurrentList<T> : ThreadSafeList<T>
     {
@@ -22,10 +21,10 @@ namespace Clustering.BenchmarkDotNet
             Sizes = new int[32];
             Counts = new int[32];
 
-            var size = 1;
-            var count = 1;
+            int size = 1;
+            int count = 1;
 
-            for (var i = 0; i < Sizes.Length; i++)
+            for (int i = 0; i < Sizes.Length; i++)
             {
                 Sizes[i] = size;
                 Counts[i] = count;
@@ -47,7 +46,7 @@ namespace Clustering.BenchmarkDotNet
         {
             _array = new T[32][];
 
-            foreach (var item in enumerable)
+            foreach (T item in enumerable)
                 Add(item);
         }
 
@@ -58,10 +57,10 @@ namespace Clustering.BenchmarkDotNet
                 if (index < 0 || index >= _count)
                     throw new ArgumentOutOfRangeException("index");
 
-                var arrayIndex = GetArrayIndex(index + 1);
+                int arrayIndex = GetArrayIndex(index + 1);
 
                 if (arrayIndex > 0)
-                    index -= (int) Math.Pow(2, arrayIndex) - 1;
+                    index -= (int)Math.Pow(2, arrayIndex) - 1;
 
                 return _array[arrayIndex][index];
             }
@@ -77,24 +76,24 @@ namespace Clustering.BenchmarkDotNet
 
         public override void Add(T element)
         {
-            var index = Interlocked.Increment(ref _index) - 1;
-            var adjustedIndex = index;
+            int index = Interlocked.Increment(ref _index) - 1;
+            int adjustedIndex = index;
 
-            var arrayIndex = GetArrayIndex(index + 1);
+            int arrayIndex = GetArrayIndex(index + 1);
 
             if (arrayIndex > 0)
                 adjustedIndex -= Counts[arrayIndex - 1];
 
             if (_array[arrayIndex] == null)
             {
-                var arrayLength = Sizes[arrayIndex];
+                int arrayLength = Sizes[arrayIndex];
                 Interlocked.CompareExchange(ref _array[arrayIndex], new T[arrayLength], null);
             }
 
             _array[arrayIndex][adjustedIndex] = element;
 
-            var count = _count;
-            var fuzzyCount = Interlocked.Increment(ref _fuzzyCount);
+            int count = _count;
+            int fuzzyCount = Interlocked.Increment(ref _fuzzyCount);
 
             if (fuzzyCount == index + 1)
                 Interlocked.CompareExchange(ref _count, fuzzyCount, count);
@@ -105,19 +104,19 @@ namespace Clustering.BenchmarkDotNet
             if (array == null)
                 throw new ArgumentNullException("array");
 
-            var count = _count;
+            int count = _count;
 
             if (array.Length - index < count)
                 throw new ArgumentException("There is not enough available space in the destination array.");
 
-            var arrayIndex = 0;
-            var elementsRemaining = count;
+            int arrayIndex = 0;
+            int elementsRemaining = count;
 
             while (elementsRemaining > 0)
             {
-                var source = _array[arrayIndex++];
-                var elementsToCopy = Math.Min(source.Length, elementsRemaining);
-                var startIndex = count - elementsRemaining;
+                T[] source = _array[arrayIndex++];
+                int elementsToCopy = Math.Min(source.Length, elementsRemaining);
+                int startIndex = count - elementsRemaining;
 
                 Array.Copy(source, 0, array, startIndex, elementsToCopy);
 
@@ -127,7 +126,7 @@ namespace Clustering.BenchmarkDotNet
 
         private static int GetArrayIndex(int count)
         {
-            var arrayIndex = 0;
+            int arrayIndex = 0;
 
             if ((count & 0xFFFF0000) != 0)
             {
@@ -175,9 +174,9 @@ namespace Clustering.BenchmarkDotNet
         {
             IEqualityComparer<T> comparer = EqualityComparer<T>.Default;
 
-            var count = Count;
+            int count = Count;
 
-            for (var i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
                 if (comparer.Equals(item, this[i]))
                     return i;
 
@@ -193,11 +192,11 @@ namespace Clustering.BenchmarkDotNet
 
         public IEnumerator<T> GetEnumerator()
         {
-            var count = Count;
+            int count = Count;
 
-            for (var i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
-                if(this[i] == null)
+                if (this[i] == null)
                     Debugger.Break();
 
                 yield return this[i];
@@ -210,13 +209,13 @@ namespace Clustering.BenchmarkDotNet
 
         protected virtual void CopyToBase(Array array, int arrayIndex)
         {
-            for (var i = 0; i < Count; ++i)
+            for (int i = 0; i < Count; ++i)
                 array.SetValue(this[i], arrayIndex + i);
         }
 
         protected virtual int AddBase(object value)
         {
-            Add((T) value);
+            Add((T)value);
 
             return Count - 1;
         }
@@ -280,7 +279,7 @@ namespace Clustering.BenchmarkDotNet
 
         int IList.IndexOf(object value)
         {
-            return IndexOf((T) value);
+            return IndexOf((T)value);
         }
 
         void IList.Clear()
@@ -290,7 +289,7 @@ namespace Clustering.BenchmarkDotNet
 
         bool IList.Contains(object value)
         {
-            return ((IList) this).IndexOf(value) != -1;
+            return ((IList)this).IndexOf(value) != -1;
         }
 
         int IList.Add(object value)
